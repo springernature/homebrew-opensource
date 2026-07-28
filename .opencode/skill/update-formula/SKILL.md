@@ -68,6 +68,11 @@ usernames (individual users only; `@org/team` refs are dropped). The daily
 PR to the changed formulae's upstream owners. Use it by hand the same way when
 opening a PR manually.
 
+`scripts/check_codeowners.sh Formula/<name>.rb` reports whether the upstream repo
+has a CODEOWNERS at all (`present`/`missing`) plus its top contributor. The daily
+workflow opens a tracking issue in this tap repo — assigned to that top
+contributor — for any upstream repo missing a CODEOWNERS.
+
 ## Requirements
 
 - `gh` authenticated (`gh auth status`). Uses `repos/<owner>/<repo>/releases/latest`,

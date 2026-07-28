@@ -10,6 +10,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   check-updates:
@@ -17,6 +18,57 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Open issues for missing upstream CODEOWNERS
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Ensure the label exists (idempotent); ignore "already exists".
+          gh label create automated --repo "$REPO" \
+            --color ededed --description "Opened by automation" 2>/dev/null || true
+          for f in Formula/*.rb; do
+            line="$(scripts/check_codeowners.sh "$f")" || {
+              echo "::warning::check_codeowners.sh failed for $f; skipping"
+              continue
+            }
+            slug="$(printf '%s' "$line" | cut -f1)"
+            status="$(printf '%s' "$line" | cut -f2)"
+            top="$(printf '%s' "$line" | cut -f3)"
+
+            [ "$status" = "missing" ] || continue
+
+            title="Add CODEOWNERS to upstream $slug"
+            # Idempotent: skip if an open issue with this title already exists.
+            existing="$(gh issue list --repo "$REPO" --state open \
+              --search "in:title $title" --json title \
+              --jq "[.[] | select(.title == \"$title\")] | length")"
+            if [ "$existing" != "0" ]; then
+              echo "Issue already open for $slug; skipping."
+              continue
+            fi
+
+            assignee_args=()
+            if [ "$top" != "-" ]; then
+              assignee_args=(--assignee "$top")
+            fi
+
+            body="The upstream repository [\`$slug\`](https://github.com/$slug) — packaged by \`$f\` in this tap — has no \`CODEOWNERS\` file.
+
+          Without one, the automated formula-update workflow can't assign update PRs to the right people. Please add a \`CODEOWNERS\` (in \`.github/\`, the repo root, or \`docs/\`) to the upstream repo.
+
+          Assigned to the current top contributor of \`$slug\`${top:+ (@$top)} as a starting point; reassign as appropriate.
+
+          _Opened automatically by \`.github/workflows/check-formula-updates.yml\`._"
+
+            gh issue create --repo "$REPO" \
+              --title "$title" \
+              --body "$body" \
+              --label automated \
+              "${assignee_args[@]}" \
+              && echo "Opened CODEOWNERS issue for $slug (assignee: ${top:--none})"
+          done
 
       - name: Check formulae and apply any updates
         id: check

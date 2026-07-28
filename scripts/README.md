@@ -100,3 +100,25 @@ individual owners. Used by the daily update workflow to assign the generated PR
 to the changed formulae's upstream owners.
 
 Requires `gh` authenticated (`GH_TOKEN` or `gh auth`).
+
+## check_codeowners.sh
+
+Determine whether a formula's upstream GitHub repo has a `CODEOWNERS` file, and
+if not, identify its top contributor (for assigning a follow-up issue).
+
+Derives `<owner>/<repo>` from the formula `url`, checks the documented
+`CODEOWNERS` locations (`.github/`, root, `docs/`), and — when none exists —
+queries the contributors API for the login with the most commits.
+
+### Usage
+
+```sh
+scripts/check_codeowners.sh Formula/<name>.rb
+```
+
+Prints one tab-separated line: `<owner>/<repo>\t<present|missing>\t<top_contributor>`
+(top contributor is `-` when CODEOWNERS is present). The daily workflow uses this
+to open a tracking issue in this tap repo, assigned to the top contributor, when
+an upstream repo lacks CODEOWNERS.
+
+Requires `gh` authenticated (`GH_TOKEN` or `gh auth`).
