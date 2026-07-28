@@ -12,6 +12,12 @@ permissions:
   pull-requests: write
   issues: write
 
+# Never let two runs (e.g. a manual dispatch overlapping the schedule) race to
+# open the same issue / PR. Queue them instead of running in parallel.
+concurrency:
+  group: check-formula-updates
+  cancel-in-progress: false
+
 jobs:
   check-updates:
     runs-on: ubuntu-latest
@@ -40,12 +46,14 @@ jobs:
             [ "$status" = "missing" ] || continue
 
             title="Add CODEOWNERS to upstream $slug"
-            # Idempotent: skip if an open issue with this title already exists.
-            existing="$(gh issue list --repo "$REPO" --state open \
+            # Idempotent: skip if an issue with this exact title already exists
+            # in ANY state. Checking closed issues too means we don't reopen a
+            # duplicate after a maintainer has closed it (fixed or declined).
+            existing="$(gh issue list --repo "$REPO" --state all \
               --search "in:title $title" --json title \
               --jq "[.[] | select(.title == \"$title\")] | length")"
             if [ "$existing" != "0" ]; then
-              echo "Issue already open for $slug; skipping."
+              echo "Issue already exists for $slug (any state); skipping."
               continue
             fi
 
