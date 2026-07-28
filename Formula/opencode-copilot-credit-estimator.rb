@@ -3,12 +3,10 @@ class OpencodeCopilotCreditEstimator < Formula
 
   desc "Terminal UI for estimating GitHub Copilot AI credit usage from opencode logs"
   homepage "https://github.com/springernature/opencode-copilot-credit-estimator"
-  # NOTE: this repository is currently private and has no tags/releases, so
-  # this formula tracks the `main` branch HEAD rather than a pinned version.
-  # Upstream intends to open source it once internal approval is granted;
-  # revisit this formula (public URL, version pin, license) at that point.
-  license :cannot_represent # no LICENSE file is present upstream yet
-  head "ssh://git@github.com/springernature/opencode-copilot-credit-estimator.git", branch: "main"
+  url "https://github.com/springernature/opencode-copilot-credit-estimator/archive/refs/tags/v0.1.0.tar.gz"
+  sha256 "9e772db8931423f351f022c04cc02a424462cae202b3c20c22d7b0254492b00a"
+  license "MIT"
+  head "https://github.com/springernature/opencode-copilot-credit-estimator.git", branch: "main"
 
   depends_on "python@3.14"
 
