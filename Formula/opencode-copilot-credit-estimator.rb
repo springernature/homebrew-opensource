@@ -3,8 +3,8 @@ class OpencodeCopilotCreditEstimator < Formula
 
   desc "Terminal UI for estimating GitHub Copilot AI credit usage from opencode logs"
   homepage "https://github.com/springernature/opencode-copilot-credit-estimator"
-  url "https://github.com/springernature/opencode-copilot-credit-estimator/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "9e772db8931423f351f022c04cc02a424462cae202b3c20c22d7b0254492b00a"
+  url "https://github.com/springernature/opencode-copilot-credit-estimator/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "7e4b074aec3654db04e1f5a1c87d77fc0b1518d7b67e3b88d2eda8245a28abcb"
   license "MIT"
   head "https://github.com/springernature/opencode-copilot-credit-estimator.git", branch: "main"
 
@@ -16,8 +16,8 @@ class OpencodeCopilotCreditEstimator < Formula
   end
 
   resource "platformdirs" do
-    url "https://files.pythonhosted.org/packages/7d/68/d8d58938dfb1370b266a1a729e6d77a985be23689a0496498ee17b2cbf90/platformdirs-4.11.0-py3-none-any.whl"
-    sha256 "360ccded2b7fce0af0ff80cc8f5942a1c5d99b0e856033acb030bfc634709e74"
+    url "https://files.pythonhosted.org/packages/81/e6/cd9575ac904136b3cbf7aa7ee819ef86eedb7274e46f230e94ea4342e729/platformdirs-4.10.0-py3-none-any.whl"
+    sha256 "fb516cdb12eb0d857d0cd85a7c57cea4d060bee4578d6cf5a14dfdf8cbf8784a"
   end
 
   resource "pygments" do
@@ -71,14 +71,18 @@ class OpencodeCopilotCreditEstimator < Formula
   end
 
   def install
-    # The project ships a standalone script (estimator.py) with no
-    # setup.py/[build-system], so it can't be pip-installed directly. Build a
-    # virtualenv containing just its dependencies, then wire up a wrapper
+    # The project ships standalone scripts (estimator.py + pricing.py) with no
+    # setup.py/[build-system], so they can't be pip-installed directly. Build a
+    # virtualenv containing just their dependencies, then wire up a wrapper
     # script that runs estimator.py with that venv's interpreter.
     venv = virtualenv_create(libexec, "python3.14")
     venv.pip_install resources
 
     libexec.install "estimator.py"
+    # estimator.py imports pricing.py, which loads its bundled pricing snapshot
+    # from resources/ via a path relative to itself, so both must ship too.
+    libexec.install "pricing.py"
+    libexec.install "resources"
 
     (bin/"opencode-copilot-credit-estimator").write <<~SH
       #!/bin/bash
