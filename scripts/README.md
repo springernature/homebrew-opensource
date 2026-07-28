@@ -78,3 +78,25 @@ for f in Formula/*.rb; do scripts/check_and_update.sh "$f"; done
 
 - The formula's `url` must be a GitHub archive tarball of the form
   `https://github.com/<owner>/<repo>/archive/refs/tags/<tag>.tar.gz`.
+
+## codeowners.sh
+
+Resolve the upstream GitHub repo's code owners for a formula and print their
+GitHub usernames, one per line.
+
+Given a `Formula/*.rb`, it derives the upstream `<owner>/<repo>` from the `url`,
+fetches that repo's `CODEOWNERS` (checking `.github/`, root, then `docs/`),
+extracts every `@mention`, and prints individual usernames. `@org/team` entries
+can't be PR assignees, so they're dropped and reported on stderr.
+
+### Usage
+
+```sh
+scripts/codeowners.sh Formula/<name>.rb
+```
+
+Prints nothing (and exits `0`) if the upstream repo has no `CODEOWNERS` or no
+individual owners. Used by the daily update workflow to assign the generated PR
+to the changed formulae's upstream owners.
+
+Requires `gh` authenticated (`GH_TOKEN` or `gh auth`).

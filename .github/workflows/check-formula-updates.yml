@@ -43,12 +43,25 @@ jobs:
             echo "No formula updates found."
           else
             echo "updated=true" >> "$GITHUB_OUTPUT"
+
+            changed_files="$(git diff --name-only -- Formula)"
+
             # Summarise which formulae changed, for the PR body.
             {
               echo "changed<<EOF"
-              git diff --name-only -- Formula
+              echo "$changed_files"
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
+
+            # Collect the upstream code owners of each changed formula so the
+            # PR can be assigned to them. codeowners.sh drops @org/team refs.
+            assignees="$(
+              while IFS= read -r f; do
+                [ -n "$f" ] && scripts/codeowners.sh "$f" 2>/dev/null || true
+              done <<< "$changed_files" | sort -u | paste -sd, -
+            )"
+            echo "assignees=$assignees" >> "$GITHUB_OUTPUT"
+            echo "Assignees resolved from upstream CODEOWNERS: ${assignees:-<none>}"
           fi
 
       - name: Create pull request
@@ -60,6 +73,7 @@ jobs:
           delete-branch: true
           commit-message: "Update formulae to latest upstream releases"
           title: "Update formulae to latest upstream releases"
+          assignees: ${{ steps.check.outputs.assignees }}
           body: |
             Automated update of formula `url` + `sha256` to the latest upstream
             GitHub releases, produced by `scripts/check_and_update.sh --apply`.

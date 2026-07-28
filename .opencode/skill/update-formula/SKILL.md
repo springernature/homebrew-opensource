@@ -60,6 +60,14 @@ that by hand or by eyeballing tags — invoke the script.
 5. **Commit** — only if the user asked. Do not `git push`; hand the exact push
    command back to the user (AGENTS.md).
 
+## Assigning PRs to upstream owners
+
+`scripts/codeowners.sh Formula/<name>.rb` prints the upstream repo's CODEOWNERS
+usernames (individual users only; `@org/team` refs are dropped). The daily
+`.github/workflows/check-formula-updates.yml` uses it to assign the generated
+PR to the changed formulae's upstream owners. Use it by hand the same way when
+opening a PR manually.
+
 ## Requirements
 
 - `gh` authenticated (`gh auth status`). Uses `repos/<owner>/<repo>/releases/latest`,
