@@ -1,0 +1,83 @@
+name: Check for formula updates
+
+on:
+  schedule:
+    # Daily at 07:00 UTC.
+    - cron: "0 7 * * *"
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check formulae and apply any updates
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          changed=""
+          for f in Formula/*.rb; do
+            # Exit 3 = newer release available; --apply rewrites url + sha256.
+            if scripts/check_and_update.sh "$f" --apply; then
+              :
+            else
+              status=$?
+              if [ "$status" -ne 0 ]; then
+                echo "::error::check_and_update.sh failed for $f (exit $status)"
+                exit "$status"
+              fi
+            fi
+          done
+
+          if git diff --quiet -- Formula; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            echo "No formula updates found."
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+            # Summarise which formulae changed, for the PR body.
+            {
+              echo "changed<<EOF"
+              git diff --name-only -- Formula
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.check.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automated/formula-updates
+          delete-branch: true
+          commit-message: "Update formulae to latest upstream releases"
+          title: "Update formulae to latest upstream releases"
+          body: |
+            Automated update of formula `url` + `sha256` to the latest upstream
+            GitHub releases, produced by `scripts/check_and_update.sh --apply`.
+
+            Changed formulae:
+
+            ```
+            ${{ steps.check.outputs.changed }}
+            ```
+
+            > [!IMPORTANT]
+            > Only top-level `url`/`sha256` are updated. Python `resource` blocks
+            > are **not** touched. Before merging, verify upstream dependencies did
+            > not change between releases (see `AGENTS.md`):
+            >
+            > ```sh
+            > gh api repos/<owner>/<repo>/compare/<oldtag>...<newtag> --jq '.files[].filename'
+            > ```
+          labels: |
+            automated
+            dependencies
