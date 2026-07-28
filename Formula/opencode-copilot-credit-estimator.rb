@@ -87,9 +87,13 @@ class OpencodeCopilotCreditEstimator < Formula
       exec "#{libexec}/bin/python3" "#{libexec}/estimator.py" "$@"
     SH
     (bin/"opencode-copilot-credit-estimator").chmod 0755
+
+    # Short alias for day-to-day use.
+    bin.install_symlink "opencode-copilot-credit-estimator" => "occe"
   end
 
   test do
     assert_match "usage:", shell_output("#{bin}/opencode-copilot-credit-estimator --help")
+    assert_match "usage:", shell_output("#{bin}/occe --help")
   end
 end
