@@ -8,7 +8,7 @@ class OpencodeCopilotCreditEstimator < Formula
   # Upstream intends to open source it once internal approval is granted;
   # revisit this formula (public URL, version pin, license) at that point.
   license :cannot_represent # no LICENSE file is present upstream yet
-  head "git@github.com:springernature/opencode-copilot-credit-estimator.git", branch: "main"
+  head "ssh://git@github.com/springernature/opencode-copilot-credit-estimator.git", branch: "main"
 
   depends_on "python@3.14"
 
