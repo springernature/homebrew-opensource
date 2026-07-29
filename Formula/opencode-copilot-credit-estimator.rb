@@ -3,8 +3,8 @@ class OpencodeCopilotCreditEstimator < Formula
 
   desc "Terminal UI for estimating GitHub Copilot AI credit usage from opencode logs"
   homepage "https://github.com/springernature/opencode-copilot-credit-estimator"
-  url "https://github.com/springernature/opencode-copilot-credit-estimator/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "7e4b074aec3654db04e1f5a1c87d77fc0b1518d7b67e3b88d2eda8245a28abcb"
+  url "https://github.com/springernature/opencode-copilot-credit-estimator/archive/refs/tags/v0.3.0.tar.gz"
+  sha256 "e37e8d51960e09c38a0980ea7be96e224fccca4ba5bd8876911c09d665b03b81"
   license "MIT"
   head "https://github.com/springernature/opencode-copilot-credit-estimator.git", branch: "main"
 
